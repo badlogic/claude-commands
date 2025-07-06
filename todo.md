@@ -90,22 +90,22 @@ src/notifications.ts # Core logic
    - Read docs/project-description.md in full using Read tool
 
 3. **Ensure directory structure and check for orphaned tasks**:
-   ```bash
-   mkdir -p docs docs/todos/work docs/todos/done
-   for d in docs/todos/work/*/task.md; do
-     [ -f "$d" ] || continue
-     pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3)
-     [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue
-     echo "- $(basename $(dirname "$d")): $(head -1 "$d" | sed 's/^# //')"
-   done
-   ```
-   - If orphaned tasks exist, STOP: "Resume, reset, or ignore? (resume [task-name] / reset [task-name] / ignore all)"
-     - **resume [task-name]**:
+   - Create directories and find orphaned tasks:
+     ```bash
+     mkdir -p docs docs/todos/work docs/todos/done && orphaned_count=0 && for d in docs/todos/work/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done
+     ```
+   - If orphaned tasks exist, STOP: "Found orphaned task(s). What would you like to do? (resume <number> / reset <number> / ignore all)"
+     - **resume <number>**:
+       - Get task name from numbered list
        - Read task.md, check Status field
        - Update **Agent PID:** with current agent PID (Bash tool: echo $PPID)
        - If "Refining": Continue from Phase 2 where it left off
        - If "In Progress": Continue from Phase 3, step 1 (Update task.md)
-     - **reset [task-name]**: Delete docs/todos/work/[task-name]/, add todo back to docs/todo.md, continue to Phase 1
+     - **reset <number>**:
+       - Get task name from numbered list
+       - Read docs/todos/work/[task-name]/task.md in full, add it back to docs/todo.md
+       - Delete docs/todos/work/[task-name]/
+       - Continue to Phase 1
      - **ignore all**: Continue to Phase 1 (leaves orphaned tasks as-is)
 
 ### Phase 1: SELECT
@@ -120,14 +120,17 @@ src/notifications.ts # Core logic
       - Otherwise: "Which todo would you like to work on? (enter number)"
 
 4. **Generate task folder name**:
-   Create unique folder name with format: `YYYY-MM-DD-HH-MM-SS-brief-task-title`
-   Example: `2025-01-06-14-30-45-add-dark-mode-toggle`
-   Use `date +%Y-%m-%d-%H-%M-%S` to get the timestamp
+   - Get the date: `date +%Y-%m-%d-%H-%M-%S`
+   - Create unique task folder name with format: `[date]-brief-task-title`
+   - Example: `2025-01-06-14-30-45-add-dark-mode-toggle`
 
 5. **Initialize work folder**:
-   - Get agent-pid by running Bash tool: `echo $PPID`
-   - Create docs/todos/work/[task-name]/ directory
-   - Create docs/todos/work/[task-name]/task.md with:
+   - Get agent-pid by running Bash tool:
+     ```bash
+     echo $PPID
+     ```
+   - Create docs/todos/work/[task-folder-name]/ directory
+   - Create docs/todos/work/[task-folder-name]/task.md with:
      ```markdown
      # [Original todo text]
 
