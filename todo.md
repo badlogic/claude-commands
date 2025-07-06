@@ -94,7 +94,9 @@ src/notifications.ts # Core logic
      ```bash
      mkdir -p docs docs/todos/work docs/todos/done && orphaned_count=0 && for d in docs/todos/work/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done
      ```
-   - If orphaned tasks exist, STOP: "Found orphaned task(s). What would you like to do? (resume <number> / reset <number> / ignore all)"
+   - If orphaned tasks exist,
+     - Present the orphaned tasks to the user as a numbered list
+     - STOP: "Found orphaned task(s). What would you like to do? (resume <number|name> / reset <number|name> / ignore all)"
      - **resume <number>**:
        - Get task name from numbered list
        - Read task.md, check Status field
