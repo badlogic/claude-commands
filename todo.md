@@ -2,7 +2,7 @@
 
 Structured workflow for implementing items from `docs/todo.md`. Work isolation in `docs/todos/work/`, completion tracking in `docs/todos/done/`. Enables concurrent work.
 
-**IMPORTANT**: No TodoRead/TodoWrite tools. Use filesystem only.
+**CRITICAL**: Follow all steps in the workflow! Do not miss executing any steps!
 
 ## Inputs
 
@@ -73,29 +73,30 @@ src/notifications.ts # Core logic
 ## Workflow
 
 ### Phase 0: SETUP
+1. **Read todos**: Read docs/todo.md in full using Read tool
+   - If does not exist: STOP and tell user no docs/todo.md exists
 
-1. **Read project description**: Read docs/project-description.md in full using Read tool
+2. **Read project description**: Read docs/project-description.md in full using Read tool
+   - If project description is missing**, create it:
+      - Use parallel Task agents to analyze the codebase:
+      - Detect language, framework, and build tools
+      - Map directory structure and key files
+      - Find entry points (main, index, app files)
+      - Identify key features and functionality
+      - Locate test files and test commands
+      - Extract available commands from package.json/Makefile/etc
+      - Present proposed project-description.md content to user
+      - STOP: "Does this project description look correct? Any corrections needed?"
+      - Write confirmed content to docs/project-description.md
+      - Read docs/project-description.md in full using Read tool
 
-2. **If project description is missing**, create it:
-   - Use parallel Task agents to analyze the codebase:
-     - Detect language, framework, and build tools
-     - Map directory structure and key files
-     - Find entry points (main, index, app files)
-     - Identify key features and functionality
-     - Locate test files and test commands
-     - Extract available commands from package.json/Makefile/etc
-   - Present proposed project-description.md content to user
-   - STOP: "Does this project description look correct? Any corrections needed?"
-   - Write confirmed content to docs/project-description.md
-   - Read docs/project-description.md in full using Read tool
-
-3. **Ensure directory structure and check for orphaned tasks**:
+2. **Ensure directory structure and check for orphaned tasks**:
    - Create directories and find orphaned tasks:
      ```bash
      mkdir -p docs docs/todos/work docs/todos/done && orphaned_count=0 && for d in docs/todos/work/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done
      ```
    - If orphaned tasks exist,
-     - Present the orphaned tasks to the user as a numbered list
+     - Present the orphaned tasks to the user as a numbered list (the user can not see the Bash tool outputs in full!)
      - STOP: "Found orphaned task(s). What would you like to do? (resume <number|name> / reset <number|name> / ignore all)"
      - **resume <number>**:
        - Get task name from numbered list
@@ -112,39 +113,38 @@ src/notifications.ts # Core logic
 
 ### Phase 1: SELECT
 
-1. **Read todos**: Read docs/todo.md in full using Read tool
+1. **Present todos**: Present numbered one-line summaries of each todo to user
 
-2. **Present todos**: Present numbered one-line summaries of each todo to user
-
-3. **Get user selection**:
+2. **Get user selection**:
    - STOP:
       - If no todos: "No todos found in docs/todo.md"
       - Otherwise: "Which todo would you like to work on? (enter number)"
 
-4. **Generate task folder name**:
-   - Get the date: `date +%Y-%m-%d-%H-%M-%S`
-   - Create unique task folder name with format: `[date]-brief-task-title`
-   - Example: `2025-01-06-14-30-45-add-dark-mode-toggle`
 
-5. **Initialize work folder**:
-   - Get agent-pid by running Bash tool:
-     ```bash
-     echo $PPID
-     ```
-   - Create docs/todos/work/[task-folder-name]/ directory
-   - Create docs/todos/work/[task-folder-name]/task.md with:
-     ```markdown
-     # [Original todo text]
+4. **Initialize work folder**:
+   - Use parallel tools calls:
+      - Generate task folder name
+         - Get the date: `date +%Y-%m-%d-%H-%M-%S`
+         - Create unique task folder name with format: `[date]-brief-task-title`
+         - Example: `2025-01-06-14-30-45-add-dark-mode-toggle`
+      - Get agent-pid by running Bash tool:
+         ```bash
+         echo $PPID
+         ```
+   - Use parallel tool calls:
+      - Create docs/todos/work/[task-folder-name]/ directory
+      - Create docs/todos/work/[task-folder-name]/task.md with:
+         ```markdown
+         # [Original todo text]
 
-     **Status:** Refining
-     **Created:** [timestamp]
-     **Agent PID:** [agent-pid]
+         **Status:** Refining
+         **Created:** [timestamp]
+         **Agent PID:** [agent-pid]
 
-     ## Original Todo
-     [Full original todo including any sub-items]
-     ```
-   - Remove selected todo from docs/todo.md
-   - TODO: Handle concurrent edits to todo.md (file locking?). Low probability.
+         ## Original Todo
+         [Full original todo including any sub-items]
+         ```
+      - Remove selected todo from docs/todo.md
 
 ### Phase 2: REFINE
 
@@ -171,14 +171,16 @@ src/notifications.ts # Core logic
 3. **Final confirmation**:
    - Present the full task.md content to user
    - STOP: "Use this description and implementation plan? (y/n)"
-   - Update task.md with refined Description and Implementation Plan sections
-   - Commit task.md with message: "Refined plan for: [task-name]"
+   - If confirmed
+      - Update task.md with refined Description and Implementation Plan sections
+      - Commit task.md with message: "Refined plan for: [task-name]"
 
 ### Phase 3: IMPLEMENT
 
 1. **Update task.md**:
-   - Set **Status:** "In Progress"
-   - Add **Started:** [ISO timestamp]
+   - Using one Update tool call
+      - Set **Status:** "In Progress"
+      - Add **Started:** [ISO timestamp]
 
 2. **Execute implementation plan**:
    - Work through checkboxes sequentially until user tests
@@ -205,7 +207,7 @@ src/notifications.ts # Core logic
 
 ### Phase 4: COMPLETE
 
-1. **Show changes** for review (git diff via mcp__vs-claude__open)
+1. **Show changes** for review (open git diff for each changed file via single mcp__vs-claude__open call)
 
 2. STOP: "Ready to commit all changes? (y/n)"
 
