@@ -105,12 +105,13 @@ Structured workflow to transform vague todos into implemented features using git
    - What existing patterns/structures to follow
    - Which files need modification
    - What related features/code already exist
-2. Draft description → STOP → "Use this description? (y/n)"
-3. Draft implementation plan → STOP → "Use this implementation plan? (y/n)"
-4. Update `task.md` with fully refined content and set `**Status**: InProgress`
-5. Commit refined plan: `git commit -am "[task-title]: Refined plan"`
-6. Open editor at worktree: `[editor-command] todos/worktrees/[timestamp]-[task-title-slug]/`
-7. STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree to start implementation"
+2. Append analysis by agents verbatim to `analysis.md`
+3. Draft description → STOP → "Use this description? (y/n)"
+4. Draft implementation plan → STOP → "Use this implementation plan? (y/n)"
+5. Update `task.md` with fully refined content and set `**Status**: InProgress`
+6. Commit refined plan: `git add -A && git commit -m "[task-title]: Refined plan"`
+7. Open editor at worktree: `[editor-command] todos/worktrees/[timestamp]-[task-title-slug]/`
+8. STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree to start implementation"
 
 ### IMPLEMENT
 1. Execute the implementation plan checkbox by checkbox:
@@ -123,7 +124,7 @@ Structured workflow to transform vague todos into implemented features using git
       - Summarize changes
       - STOP → "Approve these changes? (y/n)"
       - Mark checkbox complete in `task.md`
-      - Commit progress: `git commit -am "[task title]: [text of checkbox]"`
+      - Commit progress, including added/modified/deleted files: `git add -A && git commit -m "[task title]: [text of checkbox]"`
 2. After all checkboxes are complete, run project validation (lint/test/build).
     - If validation fails:
       - Report full error(s)
@@ -133,12 +134,12 @@ Structured workflow to transform vague todos into implemented features using git
       - Go to step 1 of `IMPLEMENT`.
 3. Present user test steps → STOP → "Do all user tests pass? (y/n)"
 4. Set `**Status**: AwaitingCommit` in `task.md`
-5. Commit: `git commit -am "[task-title]: Complete implementation"`
+5. Commit: `git add -A && git commit -m "[task-title]: Complete implementation"`
 
 ### COMMIT
 1. Present summary of what was done
 2. STOP → "Ready to create PR? (y/n)"
 3. Set `**Status**: Done` in `task.md`
 4. Move task to done with git tracking: `git mv task.md todos/done/[timestamp]-[task-title-slug].md`
-5. Commit all changes: `git commit -am "[task-title]: Complete"`
+5. Commit all changes: `git add -A && git commit -m "[task-title]: Complete"`
 6. Push branch to remote and create pull request using GitHub CLI
