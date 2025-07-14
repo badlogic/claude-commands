@@ -1,5 +1,5 @@
-# Todo Implementation Program
-Structured workflow to transform vague todos into implemented features using git worktrees and VS Code handoff. Supports task isolation, resumption, and clean commit history.
+# Todo Implementation Program (No Worktrees)
+Structured workflow to transform vague todos into implemented features. Works on current branch with single commit at completion.
 
 ## Workflow
 
@@ -11,17 +11,8 @@ Structured workflow to transform vague todos into implemented features using git
 - You MUST consult with the user in case of unexpected errors
 
 ### INIT
-1. Check for task resume: If `task.md` exists in current directory:
-     - Read `task.md` and `todos/project-description.md` in full in parallel
-     - Update `**Agent PID:** [Bash(echo $PPID)]` in task.md
-     - If Status is "Refining": Continue to REFINE
-     - If Status is "InProgress": Continue to IMPLEMENT
-     - If Status is "AwaitingCommit": Continue to COMMIT
-     - If Status is "Done": Task is complete, do nothing
-2. Add `/todos/worktrees/` to .gitignore: `rg -q "/todos/worktrees/" .gitignore || echo -e "\n/todos/worktrees/" >> .gitignore`
-3. Read `todos/project-description.md` in full
+1. Read `todos/project-description.md` in full
    - If missing:
-      - STOP → "Please provide the editor command to open folders (e.g. 'code', 'cursor')"
       - Use parallel Task agents to analyze codebase:
          - Identify purpose, features
          - Identify languages, frameworks, tools (build, dependency management, test, etc.)
@@ -54,29 +45,29 @@ Structured workflow to transform vague todos into implemented features using git
 
          ## Testing
          [How to create and run tests]
-
-         ## Editor
-         - Open folder: [command]
          ```
       - STOP → Any corrections needed? (y/n)"
       - Write confirmed content to `todos/project-description.md`
 
-4. Check for orphaned tasks: `mkdir -p todos/worktrees todos/done && orphaned_count=0 && for d in todos/worktrees/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done`
-   - Present numbered list of orphaned tasks
-   - STOP → "Resume orphaned task? (number or title/ignore)"
-      - If resume
-         - Open editor at worktree: `[editor-command] todos/worktrees/[task-name]/`
-         - STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree"
-      - else go to SELECT
+2. Check for orphaned tasks: `mkdir -p todos/work todos/done && orphaned_count=0 && for d in todos/work/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done`
+   - If orphaned tasks exist:
+      - Present numbered list of orphaned tasks
+      - STOP → "Resume orphaned task? (number or title/ignore)"
+      - If resume:
+         - Get task folder from numbered list
+         - Read task.md from selected task in full
+         - Update `**Agent PID:** [Bash(echo $PPID)]` in task.md
+         - If Status is "Refining": Continue to REFINE
+         - If Status is "InProgress": Continue to IMPLEMENT
+         - If Status is "AwaitingCommit": Continue to COMMIT
+      - If ignore: Continue to SELECT
 
 ### SELECT
 1. Read `todos/todos.md` in full
 2. Present numbered list of todos with one line summaries
 3. STOP → "Which todo would you like to work on? (enter number)"
-4. Remove selected todo from `todos/todos.md` and commit: `git commit -am "Remove todo: [task-title]"`
-5. Create git worktree with branch: `git worktree add -b [task-title-slug] todos/worktrees/$(date +%Y-%m-%d-%H-%M-%S)-[task-title-slug]/ HEAD`
-6. Change CWD to worktree: `cd todos/worktrees/[timestamp]-[task-title-slug]/`
-7. Initialize `task.md` from template in worktree root:
+4. Create task folder: `mkdir -p todos/work/$(date +%Y-%m-%d-%H-%M-%S)-[task-title-slug]/`
+5. Initialize `todos/work/[timestamp]-[task-title-slug]/task.md` from template:
    ```markdown
    # [Task Title]
    **Status:** Refining
@@ -97,7 +88,7 @@ Structured workflow to transform vague todos into implemented features using git
    ## Notes
    [Implementation notes]
    ```
-8. Commit and push initial task setup: `git add . && git commit -m "[task-title]: Initialization" && git push -u origin [task-title-slug]`
+6. Remove selected todo from `todos/todos.md`
 
 ### REFINE
 1. Research codebase with parallel Task agents:
@@ -105,13 +96,10 @@ Structured workflow to transform vague todos into implemented features using git
    - What existing patterns/structures to follow
    - Which files need modification
    - What related features/code already exist
-2. Append analysis by agents verbatim to `analysis.md`
+2. Append analysis by agents verbatim to `todos/work/[timestamp]-[task-title-slug]/analysis.md`
 3. Draft description → STOP → "Use this description? (y/n)"
 4. Draft implementation plan → STOP → "Use this implementation plan? (y/n)"
 5. Update `task.md` with fully refined content and set `**Status**: InProgress`
-6. Commit refined plan: `git add -A && git commit -m "[task-title]: Refined plan"`
-7. Open editor at worktree: `[editor-command] todos/worktrees/[timestamp]-[task-title-slug]/`
-8. STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree to start implementation"
 
 ### IMPLEMENT
 1. Execute the implementation plan checkbox by checkbox:
@@ -124,7 +112,7 @@ Structured workflow to transform vague todos into implemented features using git
       - Summarize changes
       - STOP → "Approve these changes? (y/n)"
       - Mark checkbox complete in `task.md`
-      - Commit progress, including added/modified/deleted files: `git add -A && git commit -m "[text of checkbox]"`
+      - Stage progress: `git add -A`
 2. After all checkboxes are complete, run project validation (lint/test/build).
     - If validation fails:
       - Report full error(s)
@@ -133,23 +121,22 @@ Structured workflow to transform vague todos into implemented features using git
       - Add new checkbox(es) to implementation plan in `task.md`
       - Go to step 1 of `IMPLEMENT`.
 3. Present user test steps → STOP → "Do all user tests pass? (y/n)"
+   - If no: Gather information from user on what failed and return to step 1 to fix issues
 4. Check if project description needs updating:
    - If implementation changed structure, features, or commands:
       - Present proposed updates to `todos/project-description.md`
       - STOP → "Update project description as shown? (y/n)"
       - If yes, update `todos/project-description.md`
 5. Set `**Status**: AwaitingCommit` in `task.md`
-6. Commit: `git add -A && git commit -m "Complete implementation"`
 
 ### COMMIT
 1. Present summary of what was done
-2. STOP → "Ready to create PR? (y/n)"
+2. STOP → "Ready to commit all changes? (y/n)"
 3. Set `**Status**: Done` in `task.md`
-4. Move task and analysis to done with git tracking:
-   - `git mv task.md todos/done/[timestamp]-[task-title-slug].md`
-   - `git mv analysis.md todos/done/[timestamp]-[task-title-slug]-analysis.md`
-5. Commit all changes: `git add -A && git commit -m "Complete"`
-6. Push branch to remote and create pull request using GitHub CLI
-7. STOP → "PR created. Delete the worktree? (y/n)"
-   - If yes: `git -C "$(git rev-parse --show-toplevel)" worktree remove todos/worktrees/[timestamp]-[task-title-slug]`
-   - Note: If Claude was spawned in the worktree, the working directory will become invalid after removal
+4. Move task and analysis to done:
+   - `mv todos/work/[timestamp]-[task-title-slug]/task.md todos/done/[timestamp]-[task-title-slug].md`
+   - `mv todos/work/[timestamp]-[task-title-slug]/analysis.md todos/done/[timestamp]-[task-title-slug]-analysis.md`
+   - `rmdir todos/work/[timestamp]-[task-title-slug]/`
+5. Stage all changes: `git add -A`
+6. Create single commit with descriptive message: `git commit -m "[task-title]: [summary of changes]"`
+7. STOP → "Task complete! Continue with next todo? (y/n)"
