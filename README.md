@@ -64,3 +64,14 @@ Claude will guide you through the workflow.
 2. Give the contents of `todo.md` to the agent as the first user message
 
 The agent will guide you through the workflow.
+
+## Caveats
+LLMs occasionally ignore their programming when tasks get complex. Keep your tasks small and focused for best results.
+
+Much of this could be proper code instead of prompt. But then it wouldn't be as portable or easy to tweak. Your agent can help convert `todo.md` to a real program if you prefer, calling into an agent for steps that require (interactive) inference steps.
+
+Multiple humans editing `todos/todos.md` simultaneously creates perfect race conditions. In team projects, coordinate who's working on what so you don't end up with duplicate PRs for the same feature. Replacing `todos/todos.md` with one GitHub issue per vague todo is not a solution by the way. Think it through.
+
+The worktree isolation lets you run agents in parallel, even across machines. But orphaned task detection only works if all agents run on the same machine. Distributed task management would need a central server, which defeats the simplicity. Left as an exercise for distributed systems enthusiasts and their silicon assistants.
+
+Git worktrees create actual filesystem directories. If you have many concurrent tasks, you might hit filesystem limits or confuse tools that scan directories. Clean up completed worktrees periodically, manually.
