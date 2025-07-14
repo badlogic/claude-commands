@@ -1,113 +1,144 @@
 # Todo Implementation Program
-Transform underspecified todos in `todos/todos.md` into implemented features.
+Structured workflow to transform vague todos into implemented features using git worktrees and VS Code handoff. Supports task isolation, resumption, and clean commit history.
 
 ## Workflow
 
 **CRITICAL**
-- You MUST follow state machine order
-- You MUST get user confirmation at each STOP
+- You MUST follow workflow phases in order: INIT → SELECT → REFINE → IMPLEMENT → COMMIT
+- You MUST get user confirmation or input at each STOP
+- You MUST iterate on refinement STOPs until user confirms
+- You MUST NOT mention yourself in the commit message or add yourself as a commiter
+- You MUST consult with the user in case of unexpected errors
 
 ### INIT
-1. Read `todos/project-description.md` in full
-   - If missing, generate it:
+1. Check for task resume: If `task.md` exists in current directory:
+     - Read `task.md` and `todos/project-description.md` in full in parallel
+     - Update `**Agent PID:** [Bash(echo $PPID)]` in task.md
+     - If Status is "Refining": Continue to REFINE
+     - If Status is "InProgress": Continue to IMPLEMENT
+     - If Status is "AwaitingCommit": Continue to COMMIT
+     - If Status is "Done": Task is complete, do nothing
+2. Add `/todos/worktrees/` to .gitignore: `rg -q "/todos/worktrees/" .gitignore || echo -e "\n/todos/worktrees/" >> .gitignore`
+3. Read `todos/project-description.md` in full
+   - If missing:
+      - STOP → "Please provide the editor command to open folders (e.g. 'code', 'cursor')"
       - Use parallel Task agents to analyze codebase:
-         - Detect language, framework, build tools
-         - Map directory structure and key files
-         - Find entry points (main, index, app files)
-         - Identify features, functionality, architecture
-         - Locate test files and commands
-         - Extract commands from package.json/Makefile/etc
-      - Present proposed content using template below
+         - Identify purpose, features
+         - Identify languages, frameworks, tools (build, dependency management, test, etc.)
+         - Identify components and architecture
+         - Extract commands from build scripts (package.json, CMakeLists.txt, etc.)
+         - Map structure, key files, and entry points
+         - Identify test setup and how to create new tests
+      - Present proposed project description using template below
          ```markdown
          # Project: [Name]
-         [One line description]
+         [Concise description]
 
          ## Features
-         [List of features]
+         [List of key features and purpose]
+
+         ## Tech Stack
+         [Languages, frameworks, build tools, etc.]
+
+         ## Structure
+         [Key directories, entry points, important files]
+
+         ## Architecture
+         [How components interact, main modules]
 
          ## Commands
          - Build: [command]
          - Test: [command]
          - Lint: [command]
+         - Dev/Run: [command if applicable]
 
-         ## Structure
-         [Directory structured, list of key files and their purpose]
+         ## Testing
+         [How to create and run tests]
 
-         ## Architecture
-         [List of used technologies, description of modules and their interplay]
+         ## Editor
+         - Open folder: [command]
          ```
-      - STOP → "Any corrections needed? (y/n)"
+      - STOP → Any corrections needed? (y/n)"
       - Write confirmed content to `todos/project-description.md`
 
-2. Check for orphaned tasks `mkdir -p todos/work todos/done && orphaned_count=0 && for d in todos/work/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done`
-   - Present numberd list of orphaned tasks
+4. Check for orphaned tasks: `mkdir -p todos/worktrees todos/done && orphaned_count=0 && for d in todos/worktrees/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done`
+   - Present numbered list of orphaned tasks
    - STOP → "Resume orphaned task? (number or title/ignore)"
       - If resume
-         - Read `task.md` in full
-         - Update Agent PID with output from Bash(echo $PPID)
-         - Determine status and either go to REFINE or IMPLEMENT
-      - else if ignore go to SELECT
+         - Open editor at worktree: `[editor-command] todos/worktrees/[task-name]/`
+         - STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree"
+      - else go to SELECT
 
 ### SELECT
 1. Read `todos/todos.md` in full
-2. Present numbered list of todos
-3. STOP → user selects number
-4. Create work folder: `todos/work/$(date +%Y%m%d-%H%M%S)-[task-title-slug]/`
-5. Initialize `task.md` from template
+2. Present numbered list of todos with one line summaries
+3. STOP → "Which todo would you like to work on? (enter number)"
+4. Remove selected todo from `todos/todos.md` and commit: `git commit -am "Remove todo: [task-title]"`
+5. Create git worktree with branch: `git worktree add -b [task-title-slug] todos/worktrees/$(date +%Y%m%d-%H%M%S)-[task-title-slug]/ HEAD`
+6. Change CWD to worktree: `cd todos/worktrees/[timestamp]-[task-title-slug]/`
+7. Initialize `task.md` from template in worktree root:
    ```markdown
    # [Task Title]
-   **Status:** Refining|InProgress|Done
+   **Status:** Refining
    **Agent PID:** [Bash(echo $PPID)]
 
    ## Original Todo
-   [raw todo text from todos/todos.md]"
+   [raw todo text from todos/todos.md]
 
    ## Description
    [what we're building]
 
    ## Implementation Plan
    [how we are building it]
-   - [ ] Code change with location(s) (src/file.ts:45-93)
+   - [ ] Code change with location(s) if applicable (src/file.ts:45-93)
    - [ ] Automated test: ...
    - [ ] User test: ...
 
    ## Notes
    [Implementation notes]
    ```
-6. Create git worktree in `todos/work/$(date +%Y%m%d-%H%M%S)-[task-title-slug]/worktree`
-   - Change CWD to worktree folder and stay in that CWD
-   - Create branch [task-title-slug]
-7. Remove selected todo from `todos/todos.md`
+8. Commit and push initial task setup: `git add . && git commit -m "[task-title]: Initialization" && git push -u origin [task-title-slug]`
 
 ### REFINE
-1. Research codebase with parallel Task agents
-2. Draft description → STOP → user confirms or re-draft until confirmed
-3. Draft implementation plan → STOP → user confirms or re-draft until confirmed
-4. Update `task.md` with fully refined content
+1. Research codebase with parallel Task agents:
+   - Where in codebase changes are needed for this todo
+   - What existing patterns/structures to follow
+   - Which files need modification
+   - What related features/code already exist
+2. Draft description → STOP → "Use this description? (y/n)"
+3. Draft implementation plan → STOP → "Use this implementation plan? (y/n)"
+4. Update `task.md` with fully refined content and set `**Status**: InProgress`
+5. Commit refined plan: `git commit -am "[task-title]: Refined plan"`
+6. Open editor at worktree: `[editor-command] todos/worktrees/[timestamp]-[task-title-slug]/`
+7. STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree to start implementation"
 
 ### IMPLEMENT
-1. Set `**Status**: InProgress` in `task.md`
-2.  Execute the implementation plan checkbox by checkbox:
-   - **During this process, if you discover unforeseen work is needed, you MUST pause, propose a new checkbox for the plan, STOP for user approval, and add it to `task.md` before proceeding.**
+1. Execute the implementation plan checkbox by checkbox:
+   - **During this process, if you discover unforeseen work is needed, you MUST:**
+      - Pause and propose a new checkbox for the plan
+      - STOP → "Add this new checkbox to the plan? (y/n)"
+      - Add new checkbox to `task.md` before proceeding
    - For the current checkbox:
       - Make code changes
       - Summarize changes
-      - STOP → user confirms chnages
+      - STOP → "Approve these changes? (y/n)"
       - Mark checkbox complete in `task.md`
       - Commit progress: `git commit -am "[task title]: [text of checkbox]"`
-3.  After all checkboxes are complete, run project validation (lint/test/build).
+2. After all checkboxes are complete, run project validation (lint/test/build).
     - If validation fails:
-      - Report the full error(s)
+      - Report full error(s)
       - Propose one or more new checkboxes to fix the issue
-      - STOP → user confirms or re-draft until confirmed
+      - STOP → "Add these fix checkboxes to the plan? (y/n)"
       - Add new checkbox(es) to implementation plan in `task.md`
-      - Go to step 2 of `IMPLEMENT`.
-4. Present user test steps → STOP → user validates
+      - Go to step 1 of `IMPLEMENT`.
+3. Present user test steps → STOP → "Do all user tests pass? (y/n)"
+4. Set `**Status**: AwaitingCommit` in `task.md`
+5. Commit: `git commit -am "[task-title]: Complete implementation"`
 
 ### COMMIT
 1. Present summary of what was done
-2.  STOP → Ask for final approval of implementation
-3. Move `task.md` to `todos/done/$(date +%Y%m%d-%H%M%S)-[task-title-slug].md`
-4. Commit all changes: `git commit -am "[descriptive message]"`
-   - Do NOT mention yourself in the commit message or add yourself as a commiter
-5. Push branch to remote and create pull request using GitHub CLI
+2. STOP → "Ready to create PR? (y/n)"
+3. Set `**Status**: Done` in `task.md`
+4. Move task to done with git tracking: `git mv task.md todos/done/[timestamp]-[task-title-slug].md`
+5. Commit all changes: `git commit -am "[task-title]: Complete"`
+6. Push branch to remote and create pull request using GitHub CLI
