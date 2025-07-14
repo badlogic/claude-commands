@@ -38,6 +38,7 @@ See also [prompt-as-program](https://mariozechner.at/posts/2025-06-02-prompts-ar
 
 ### Claude Code
 1. Put `todo.md` in `~/.claude/commands` (global) or `project/.claude/commands` (project)
+    - If you put it in your project, ensure you commit it before starting work on any todos
 2. In your project: `mkdir -p todos && echo "- add dark mode" > todos/todos.md`
 
 ### Other agents
