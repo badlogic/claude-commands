@@ -150,3 +150,6 @@ Structured workflow to transform vague todos into implemented features using git
    - `git mv analysis.md todos/done/[timestamp]-[task-title-slug]-analysis.md`
 5. Commit all changes: `git add -A && git commit -m "Complete"`
 6. Push branch to remote and create pull request using GitHub CLI
+7. STOP → "PR created. Delete the worktree? (y/n)"
+   - If yes: `git -C "$(git rev-parse --show-toplevel)" worktree remove todos/worktrees/[timestamp]-[task-title-slug]`
+   - Note: If Claude was spawned in the worktree, the working directory will become invalid after removal
