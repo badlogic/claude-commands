@@ -1,12 +1,12 @@
 # Todo Implementation Program
 
-Structured workflow for implementing items from `docs/todo.md`. Work isolation in `docs/todos/work/`, completion tracking in `docs/todos/done/`. Enables concurrent work.
+Structured workflow for implementing items from `todos/todos.md`. Work isolation in `todos/work/`, completion tracking in `todos/done/`. Enables concurrent work.
 
 **CRITICAL**: Follow all steps in the workflow! Do not miss executing any steps!
 
 ## Inputs
 
-**docs/todo.md** - User's todo list (any format):
+**todos/todo.md** - User's todo list (any format):
 ```markdown
 - Add dark mode toggle to settings
   - Should persist across sessions
@@ -16,7 +16,7 @@ Fix memory leak in WebSocket handler
   See issue #123
 ```
 
-**docs/project-description.md** - Project context and commands (auto-generated, user-editable):
+**todos/project-description.md** - Project context and commands (auto-generated, user-editable):
 ```markdown
 # Project: Claude Code notifications
 
@@ -41,7 +41,7 @@ src/notifications.ts # Core logic
 
 ## State
 
-**docs/todos/work/[task-name]/task.md** - Active work in dedicated folders:
+**todos/work/[task-name]/task.md** - Active work in dedicated folders:
 ```markdown
 # [Todo title]
 
@@ -66,16 +66,16 @@ src/notifications.ts # Core logic
 
 ## Output
 **project-description.md** - On first run, or any time the user asks to regenerate it
-**docs/todos/done/[task-name].md** - Completed task with history
-**Updated todo.md** - Completed items removed
+**todos/done/[task-name].md** - Completed task with history
+**Updated todos.md** - Completed items removed
 
 ## Workflow
 
 ### Phase 0: SETUP
-1. **Read todos**: Read docs/todo.md in full using Read tool
-   - If does not exist: STOP and tell user no docs/todo.md exists
+1. **Read todos**: Read todos/todos.md in full using Read tool
+   - If does not exist: STOP and tell user no todos/todos.md exists
 
-2. **Read project description**: Read docs/project-description.md in full using Read tool
+2. **Read project description**: Read todos/project-description.md in full using Read tool
    - If project description is missing**, create it:
       - Use parallel Task agents to analyze the codebase:
       - Detect language, framework, and build tools
@@ -86,13 +86,13 @@ src/notifications.ts # Core logic
       - Extract available commands from package.json/Makefile/etc
       - Present proposed project-description.md content to user
       - STOP: "Does this project description look correct? Any corrections needed?"
-      - Write confirmed content to docs/project-description.md
-      - Read docs/project-description.md in full using Read tool
+      - Write confirmed content to todos/project-description.md
+      - Read todos/project-description.md in full using Read tool
 
 2. **Ensure directory structure and check for orphaned tasks**:
    - Create directories and find orphaned tasks:
      ```bash
-     mkdir -p docs docs/todos/work docs/todos/done && orphaned_count=0 && for d in docs/todos/work/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done
+     mkdir -p docs todos/work todos/done && orphaned_count=0 && for d in todos/work/*/task.md; do [ -f "$d" ] || continue; pid=$(grep "^**Agent PID:" "$d" | cut -d' ' -f3); [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1 && continue; orphaned_count=$((orphaned_count + 1)); task_name=$(basename $(dirname "$d")); task_title=$(head -1 "$d" | sed 's/^# //'); echo "$orphaned_count. $task_name: $task_title"; done
      ```
    - If orphaned tasks exist,
      - Present the orphaned tasks to the user as a numbered list (the user can not see the Bash tool outputs in full!)
@@ -105,8 +105,8 @@ src/notifications.ts # Core logic
        - If "In Progress": Continue from Phase 3, step 1 (Update task.md)
      - **reset <number>**:
        - Get task name from numbered list
-       - Read docs/todos/work/[task-name]/task.md in full, add it back to docs/todo.md
-       - Delete docs/todos/work/[task-name]/
+       - Read todos/work/[task-name]/task.md in full, add it back to todos/todos.md
+       - Delete todos/work/[task-name]/
        - Continue to Phase 1
      - **ignore all**: Continue to Phase 1 (leaves orphaned tasks as-is)
 
@@ -116,7 +116,7 @@ src/notifications.ts # Core logic
 
 2. **Get user selection**:
    - STOP:
-      - If no todos: "No todos found in docs/todo.md"
+      - If no todos: "No todos found in todos/todos.md"
       - Otherwise: "Which todo would you like to work on? (enter number)"
 
 
@@ -131,8 +131,8 @@ src/notifications.ts # Core logic
          echo $PPID
          ```
    - Use parallel tool calls:
-      - Create docs/todos/work/[task-folder-name]/ directory
-      - Create docs/todos/work/[task-folder-name]/task.md with:
+      - Create todos/work/[task-folder-name]/ directory
+      - Create todos/work/[task-folder-name]/task.md with:
          ```markdown
          # [Original todo text]
 
@@ -143,7 +143,7 @@ src/notifications.ts # Core logic
          ## Original Todo
          [Full original todo including any sub-items]
          ```
-      - Remove selected todo from docs/todo.md
+      - Remove selected todo from todos/todos.md
 
 ### Phase 2: REFINE
 
@@ -198,9 +198,9 @@ src/notifications.ts # Core logic
 
 6. **Check if project description needs updating**:
    - If implementation changed structure, features, or commands:
-     - Present proposed updates to docs/project-description.md
+     - Present proposed updates to todos/project-description.md
      - STOP: "Update project description as shown? (y/n)"
-     - If yes, update docs/project-description.md
+     - If yes, update todos/project-description.md
 
 ### Phase 4: COMPLETE
 
@@ -211,8 +211,8 @@ src/notifications.ts # Core logic
 3. **If approved**:
    - Move task to done and cleanup:
      ```bash
-     mv docs/todos/work/[task-name]/task.md docs/todos/done/[task-name].md && \
-     rmdir docs/todos/work/[task-name]/
+     mv todos/work/[task-name]/task.md todos/done/[task-name].md && \
+     rmdir todos/work/[task-name]/
      ```
    - Commit all source changes with descriptive message
 
