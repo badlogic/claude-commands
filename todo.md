@@ -9,6 +9,7 @@ Structured workflow to transform vague todos into implemented features using git
 - You MUST iterate on refinement STOPs until user confirms
 - You MUST NOT mention yourself in commit messages or add yourself as a commiter
 - You MUST consult with the user in case of unexpected errors
+- You MUST not forget to commits files you added/deleted/modified in the IMPLEMENT phase
 
 ### INIT
 1. Check for task resume: If `task.md` exists in current directory:
