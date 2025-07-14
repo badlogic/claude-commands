@@ -124,7 +124,7 @@ Structured workflow to transform vague todos into implemented features using git
       - Summarize changes
       - STOP → "Approve these changes? (y/n)"
       - Mark checkbox complete in `task.md`
-      - Commit progress, including added/modified/deleted files: `git add -A && git commit -m "[task title]: [text of checkbox]"`
+      - Commit progress, including added/modified/deleted files: `git add -A && git commit -m "[text of checkbox]"`
 2. After all checkboxes are complete, run project validation (lint/test/build).
     - If validation fails:
       - Report full error(s)
@@ -134,12 +134,14 @@ Structured workflow to transform vague todos into implemented features using git
       - Go to step 1 of `IMPLEMENT`.
 3. Present user test steps → STOP → "Do all user tests pass? (y/n)"
 4. Set `**Status**: AwaitingCommit` in `task.md`
-5. Commit: `git add -A && git commit -m "[task-title]: Complete implementation"`
+5. Commit: `git add -A && git commit -m "Complete implementation"`
 
 ### COMMIT
 1. Present summary of what was done
 2. STOP → "Ready to create PR? (y/n)"
 3. Set `**Status**: Done` in `task.md`
-4. Move task to done with git tracking: `git mv task.md todos/done/[timestamp]-[task-title-slug].md`
-5. Commit all changes: `git add -A && git commit -m "[task-title]: Complete"`
+4. Move task and analysis to done with git tracking: 
+   - `git mv task.md todos/done/[timestamp]-[task-title-slug].md`
+   - `git mv analysis.md todos/done/[timestamp]-[task-title-slug]-analysis.md`
+5. Commit all changes: `git add -A && git commit -m "Complete"`
 6. Push branch to remote and create pull request using GitHub CLI
