@@ -133,14 +133,19 @@ Structured workflow to transform vague todos into implemented features using git
       - Add new checkbox(es) to implementation plan in `task.md`
       - Go to step 1 of `IMPLEMENT`.
 3. Present user test steps → STOP → "Do all user tests pass? (y/n)"
-4. Set `**Status**: AwaitingCommit` in `task.md`
-5. Commit: `git add -A && git commit -m "Complete implementation"`
+4. Check if project description needs updating:
+   - If implementation changed structure, features, or commands:
+      - Present proposed updates to `todos/project-description.md`
+      - STOP → "Update project description as shown? (y/n)"
+      - If yes, update `todos/project-description.md`
+5. Set `**Status**: AwaitingCommit` in `task.md`
+6. Commit: `git add -A && git commit -m "Complete implementation"`
 
 ### COMMIT
 1. Present summary of what was done
 2. STOP → "Ready to create PR? (y/n)"
 3. Set `**Status**: Done` in `task.md`
-4. Move task and analysis to done with git tracking: 
+4. Move task and analysis to done with git tracking:
    - `git mv task.md todos/done/[timestamp]-[task-title-slug].md`
    - `git mv analysis.md todos/done/[timestamp]-[task-title-slug]-analysis.md`
 5. Commit all changes: `git add -A && git commit -m "Complete"`
