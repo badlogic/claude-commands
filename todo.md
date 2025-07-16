@@ -66,7 +66,7 @@ Structured workflow to transform vague todos into implemented features using git
    - Present numbered list of orphaned tasks
    - STOP → "Resume orphaned task? (number or title/ignore)"
       - If resume
-         - Open editor at worktree: `[editor-command] todos/worktrees/[task-name]/`
+         - Open editor at worktree: `[editor-command] /absolute/path/to/todos/worktrees/[task-name]/`
          - STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree"
       - else go to SELECT
 
@@ -111,7 +111,7 @@ Structured workflow to transform vague todos into implemented features using git
 4. Draft implementation plan → STOP → "Use this implementation plan? (y/n)"
 5. Update `task.md` with fully refined content and set `**Status**: InProgress`
 6. Commit refined plan: `git add -A && git commit -m "[task-title]: Refined plan"`
-7. Open editor at worktree: `[editor-command] todos/worktrees/[timestamp]-[task-title-slug]/`
+7. Open editor at worktree: `[editor-command] /absolute/path/to/todos/worktrees/[timestamp]-[task-title-slug]/`
 8. STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree to start implementation"
 
 ### IMPLEMENT
