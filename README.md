@@ -5,8 +5,8 @@ Human-agent collaborative workflows for transforming vague todos into implemente
 This workflow is meant for engineers who want to stay in control of and informed about their code base, using agents to do the tedious work, and their brain for the hard parts.
 
 **Two workflows available:**
-- **`todo.md`**: Full task isolation using git worktrees, separate branches, and incremental commits. Best for complex features or when working on multiple tasks in parallel.
-- **`todo-no-worktrees.md`**: Simpler workflow on current branch with single commit at completion. Best for quick fixes, single-task focus, or when worktrees aren't desired.
+- **`todo-worktree.md`**: Full task isolation using git worktrees, separate branches, and incremental commits. Best for complex features or when working on multiple tasks in parallel.
+- **`todo-branch.md`**: Simpler workflow on current branch with single commit at completion. Best for quick fixes, single-task focus, or when worktrees aren't desired.
 
 **Problems this solves**:
 - Breaking vague ideas into well defined problem descriptions and concrete implementation steps
@@ -28,24 +28,24 @@ This workflow is meant for engineers who want to stay in control of and informed
 
 ## How it works
 
-Both workflows follow the same state machine pattern with slight variations. Read [`todo.md`](./todo.md) or [`todo-no-worktrees.md`](./todo-no-worktrees.md) to understand the full flow and adapt it to your needs.
+Both workflows follow the same state machine pattern with slight variations. Read [`todo-worktree.md`](./todo-worktree.md) or [`todo-branch.md`](./todo-branch.md) to understand the full flow and adapt it to your needs.
 
 At its core, each workflow is a state machine that guides the agent and the user through distinct phases:
 
 - **`INIT`**: Sets up the project description (`todos/project-description.md`) and checks for orphaned tasks from previous sessions offering them for resumption
-- **`SELECT`**: The human chooses a task from `todos/todos.md` 
+- **`SELECT`**: The human chooses a task from `todos/todos.md`
 - **`REFINE`**: The agent researches the codebase and collaborates with the human to create a detailed implementation plan
 - **`IMPLEMENT`**: The agent executes the plan step-by-step, with the human reviewing, revising and approving each change
-- **`COMMIT`**: The work is finalized - either as a PR (todo.md) or a single commit (todo-no-worktrees.md)
+- **`COMMIT`**: The work is finalized - either as a PR (todo-worktree.md) or a single commit (todo-branch.md)
 
 **Key concepts:**
-- **Todo list**: `todos/todos.md` - Simple markdown file with your vague ideas, one per line or bullet
+- **Todo list**: `todos/todos.md` - Simple markdown file with your vague ideas, one per line or bullet. Just jot down ideas/issues quickly here.
 - **Task transformation**: Selected todos become detailed `task.md` files with description, implementation plan, and status tracking
-- **Project context**: `project-description.md` provides reusable context about the codebase
+- **Project context**: `project-description.md` provides reusable, extensible context about the codebase
 - **Research preservation**: Agent analysis is saved to `analysis.md` for reference
-- **Isolation strategies**: 
-  - `todo.md`: Git worktrees with separate branches
-  - `todo-no-worktrees.md`: Current branch with progressive staging
+- **Isolation strategies**:
+  - `todo-worktree.md`: Git worktrees with separate branches
+  - `todo-branch.md`: Current branch with progressive staging
 
 See also [prompt-as-code](https://mariozechner.at/posts/2025-06-02-prompts-are-code/) workflow.
 
@@ -53,8 +53,8 @@ See also [prompt-as-code](https://mariozechner.at/posts/2025-06-02-prompts-are-c
 
 ### Claude Code
 1. Choose your workflow:
-   - `todo.md` for worktree-based isolation (recommended for most users)
-   - `todo-no-worktrees.md` for simpler single-branch workflow
+   - `todo-worktree.md` for worktree-based isolation (recommended for most users)
+   - `todo-branch.md` for simpler single-branch workflow
 2. Put your chosen file in `~/.claude/commands` (global) or `project/.claude/commands` (project)
    - If you put it in your project, ensure you commit it before starting work on any todos
 3. In your project: `mkdir -p todos && echo "- add dark mode" > todos/todos.md`
@@ -62,10 +62,10 @@ See also [prompt-as-code](https://mariozechner.at/posts/2025-06-02-prompts-are-c
 ### Other agents
 1. Choose your workflow (see descriptions above)
 2. Put your chosen file in a location accessible to your agent
-3. In your project: `mkdir -p todos && echo "- add dark mode" > todos/todos.md`
+3. In your project, create your first todo: `mkdir -p todos && echo "- add dark mode" > todos/todos.md`
 
 ## Usage
-The core idea is to load your chosen workflow as a system prompt or initial instruction for your agent. The agent will then run the workflow defined in the prompt and guide you through it.
+The core idea is to load your chosen workflow as a system prompt or initial instruction for your agent. The agent will then run the workflow defined in the prompt and guide you through it. Like in a text adventure.
 
 ### Claude Code
 In your project root directory:
@@ -73,8 +73,8 @@ In your project root directory:
 # For worktree workflow
 claude --dangerously-skip-permissions "/todo"
 
-# For no-worktrees workflow  
-claude --dangerously-skip-permissions "/todo-no-worktrees"
+# For no-worktrees workflow
+claude --dangerously-skip-permissions "/todo-branch"
 
 # The --dangerously-skip-permissions flag allows the agent to execute
 # shell commands (git, cd, mkdir) as defined in the workflow without
@@ -92,14 +92,14 @@ The agent will guide you through the workflow.
 
 ## Caveats
 
-LLMs occasionally ignore their programming when tasks get complex. Keep your tasks small and focused for best results.
+**LLMS are unreliable**: LLMs occasionally ignore their programming when tasks get complex. Keep your tasks small and focused for best results.
 
-**Workflow-specific considerations:**
-- **`todo.md`**: The worktree isolation lets you run agents in parallel, even across machines, but orphaned task detection only works if all agents run on the same machine.
-- **`todo-no-worktrees.md`**: Works on your current branch with uncommitted changes throughout the process. Make sure your working tree is clean before starting. Consider using a feature branch to avoid working directly on main/master.
+**`todo-worktree.md`**: The worktree isolation lets you run agents in parallel, even across machines, but orphaned task detection only works if all agents run on the same machine.
 
-Much of this could be proper code instead of a prompt. But then it wouldn't be as portable or easy to tweak. Your agent can help convert the workflows to a real program if you prefer, calling into an agent for steps that require (interactive) inference.
+**`todo-branch.md`**: Works on your current branch with uncommitted changes throughout the process. Make sure your working tree is clean before starting. Consider switching to a feature branch to avoid working directly on main.
 
-Multiple humans editing `todos/todos.md` simultaneously creates perfect race conditions. In team projects, coordinate who's working on what so you don't end up with duplicate PRs for the same feature. Replacing `todos/todos.md` with one GitHub issue per vague todo is not a solution by the way. Think it through.
+**It's just a prompt** Much of this could be proper code instead of a prompt. But then it wouldn't be as portable or easy to tweak. Your agent can help convert the workflows to a real program if you prefer, calling into an agent for steps that require (interactive) inference.
 
-Distributed task management across machines would need a central server, which defeats the simplicity. Left as an exercise for distributed systems enthusiasts and their silicon assistants.
+**Concurrency**: Multiple humans editing `todos/todos.md` simultaneously creates perfect race conditions. In team projects, coordinate who's working on what so you don't end up with duplicate PRs for the same feature. Replacing `todos/todos.md` with one GitHub issue per vague todo is not a solution by the way. Think it through.
+
+**Army of agents**: Distributed task management across machines would need a central server, which defeats the simplicity. Left as an exercise for distributed systems enthusiasts and their silicon assistants.
