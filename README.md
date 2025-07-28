@@ -55,8 +55,9 @@ See also [prompt-as-code](https://mariozechner.at/posts/2025-06-02-prompts-are-c
 1. Choose your workflow:
    - `todo-worktree.md` for worktree-based isolation (recommended for most users)
    - `todo-branch.md` for simpler single-branch workflow
-2. Put your chosen file in `~/.claude/commands` (global) or `project/.claude/commands` (project)
-   - If you put it in your project, ensure you commit it before starting work on any todos
+2. Choose a scope:
+   - Global use: Put the file in `~/.claude/commands`
+   - Project-specific use: Put the file in `.claude/commands` within your project directory. If you use this option, make sure to commit the file before starting work on any todos
 3. In your project: `mkdir -p todos && echo "- add dark mode" > todos/todos.md`
 
 ### Other agents
@@ -71,7 +72,7 @@ The core idea is to load your chosen workflow as a system prompt or initial inst
 In your project root directory:
 ```bash
 # For worktree workflow
-claude --dangerously-skip-permissions "/todo"
+claude --dangerously-skip-permissions "/todo-worktree"
 
 # For no-worktrees workflow
 claude --dangerously-skip-permissions "/todo-branch"
@@ -92,7 +93,7 @@ The agent will guide you through the workflow.
 
 ## Caveats
 
-**LLMS are unreliable**: LLMs occasionally ignore their programming when tasks get complex. Keep your tasks small and focused for best results.
+**LLMs are unreliable**: LLMs occasionally ignore their programming when tasks get complex. Keep your tasks small and focused for best results.
 
 **`todo-worktree.md`**: The worktree isolation lets you run agents in parallel, even across machines, but orphaned task detection only works if all agents run on the same machine.
 
