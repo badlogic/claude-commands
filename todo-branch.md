@@ -56,7 +56,7 @@ Structured workflow to transform vague todos into implemented features. Works on
       - STOP → "Resume orphaned task? (number or title/ignore)"
       - If resume:
          - Get task folder from numbered list
-         - Read task.md from selected task in full
+         - Read task.md and analyis.md from selected task in full
          - Update `**Agent PID:** [Bash(echo $PPID)]` in task.md
          - If Status is "Refining": Continue to REFINE
          - If Status is "InProgress": Continue to IMPLEMENT
@@ -79,6 +79,8 @@ Structured workflow to transform vague todos into implemented features. Works on
 
    ## Description
    [what we're building]
+   
+   *Read [analysis.md](./analysis.md) in full for detailed codebase research and context*
 
    ## Implementation Plan
    [how we are building it]
@@ -139,5 +141,9 @@ Structured workflow to transform vague todos into implemented features. Works on
    - `mv todos/work/[timestamp]-[task-title-slug]/analysis.md todos/done/[timestamp]-[task-title-slug]-analysis.md`
    - `rmdir todos/work/[timestamp]-[task-title-slug]/`
 5. Stage all changes: `git add -A`
-6. Create single commit with descriptive message: `git commit -m "[task-title]: [summary of changes]"`
+6. STOP → Show the commit message to the user "Use this commit message? (y/n)"
+   - - **CRITICAL** Do NOT mention yourself in the commit message or add yourself as a committer!
+6. **CRITICAL**: Create **ONE SINGLE COMMIT** that includes BOTH the implementation changes AND the todos/ folder changes: `git commit -m "[task-title]: [summary of changes]"`
+   - This commit must include: code changes + task management changes + todos.md updates
+   - Never make separate commits for code vs task management
 7. STOP → "Task complete! Continue with next todo? (y/n)"

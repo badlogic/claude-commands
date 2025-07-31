@@ -88,6 +88,8 @@ Structured workflow to transform vague todos into implemented features using git
 
    ## Description
    [what we're building]
+   
+   *Read [analysis.md](./analysis.md) in full for detailed codebase research and context*
 
    ## Implementation Plan
    [how we are building it]
