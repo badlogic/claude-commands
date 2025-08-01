@@ -114,7 +114,7 @@ Structured workflow to transform vague todos into implemented features using git
 5. Update `task.md` with fully refined content and set `**Status**: InProgress`
 6. Commit refined plan: `git add -A && git commit -m "[task-title]: Refined plan"`
 7. Open editor at worktree: `[editor-command] /absolute/path/to/todos/worktrees/[timestamp]-[task-title-slug]/`
-8. STOP → "Editor opened at worktree. Run `claude "/todo"` in worktree to start implementation"
+8. STOP → "Editor opened at worktree. Run `claude "/todo-worktree"` in worktree to start implementation"
 
 ### IMPLEMENT
 1. Execute the implementation plan checkbox by checkbox:
