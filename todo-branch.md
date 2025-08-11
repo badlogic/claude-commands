@@ -67,8 +67,13 @@ Structured workflow to transform vague todos into implemented features. Works on
 1. Read `todos/todos.md` in full
 2. Present numbered list of todos with one line summaries
 3. STOP → "Which todo would you like to work on? (enter number)"
-4. Create task folder: `mkdir -p todos/work/$(date +%Y-%m-%d-%H-%M-%S)-[task-title-slug]/`
-5. Initialize `todos/work/[timestamp]-[task-title-slug]/task.md` from template:
+4. Create ONE task folder with proper timestamp:
+   - First get timestamp: `TIMESTAMP=$(date +%Y%m%d-%H%M%S)`
+   - Create slug from task title (lowercase, replace spaces with hyphens)
+   - Create folder: `mkdir -p "todos/work/${TIMESTAMP}-[task-title-slug]"`
+   - Store folder path in variable: `TASK_DIR="todos/work/${TIMESTAMP}-[task-title-slug]"`
+   - **IMPORTANT**: Use this same `$TASK_DIR` variable throughout the workflow
+5. Initialize `${TASK_DIR}/task.md` from template:
    ```markdown
    # [Task Title]
    **Status:** Refining
@@ -99,29 +104,29 @@ Structured workflow to transform vague todos into implemented features. Works on
    - What existing patterns/structures to follow
    - Which files need modification
    - What related features/code already exist
-2. Append analysis by agents verbatim to `todos/work/[timestamp]-[task-title-slug]/analysis.md`
+2. Append analysis by agents verbatim to `${TASK_DIR}/analysis.md`
 3. Draft description → STOP → "Use this description? (y/n)"
 4. Draft implementation plan → STOP → "Use this implementation plan? (y/n)"
-5. Update `task.md` with fully refined content and set `**Status**: InProgress`
+5. Update `${TASK_DIR}/task.md` with fully refined content and set `**Status**: InProgress`
 
 ### IMPLEMENT
 1. Execute the implementation plan checkbox by checkbox:
    - **During this process, if you discover unforeseen work is needed, you MUST:**
       - Pause and propose a new checkbox for the plan
       - STOP → "Add this new checkbox to the plan? (y/n)"
-      - Add new checkbox to `task.md` before proceeding
+      - Add new checkbox to `${TASK_DIR}/task.md` before proceeding
    - For the current checkbox:
       - Make code changes
       - Summarize changes
       - STOP → "Approve these changes? (y/n)"
-      - Mark checkbox complete in `task.md`
+      - Mark checkbox complete in `${TASK_DIR}/task.md`
       - Stage progress: `git add -A`
 2. After all checkboxes are complete, run project validation (lint/test/build).
     - If validation fails:
       - Report full error(s)
       - Propose one or more new checkboxes to fix the issue
       - STOP → "Add these checkboxes to the plan? (y/n)"
-      - Add new checkbox(es) to implementation plan in `task.md`
+      - Add new checkbox(es) to implementation plan in `${TASK_DIR}/task.md`
       - Go to step 1 of `IMPLEMENT`.
 3. Present user test steps → STOP → "Do all user tests pass? (y/n)"
    - If no: Gather information from user on what failed and return to step 1 to fix issues
@@ -130,16 +135,17 @@ Structured workflow to transform vague todos into implemented features. Works on
       - Present proposed updates to `todos/project-description.md`
       - STOP → "Update project description as shown? (y/n)"
       - If yes, update `todos/project-description.md`
-5. Set `**Status**: AwaitingCommit` in `task.md`
+5. Set `**Status**: AwaitingCommit` in `${TASK_DIR}/task.md`
 
 ### COMMIT
 1. Present summary of what was done
 2. STOP → "Ready to commit all changes? (y/n)"
-3. Set `**Status**: Done` in `task.md`
+3. Set `**Status**: Done` in `${TASK_DIR}/task.md`
 4. Move task and analysis to done:
-   - `mv todos/work/[timestamp]-[task-title-slug]/task.md todos/done/[timestamp]-[task-title-slug].md`
-   - `mv todos/work/[timestamp]-[task-title-slug]/analysis.md todos/done/[timestamp]-[task-title-slug]-analysis.md`
-   - `rmdir todos/work/[timestamp]-[task-title-slug]/`
+   - Get base name: `TASK_NAME=$(basename "${TASK_DIR}")`
+   - `mv "${TASK_DIR}/task.md" "todos/done/${TASK_NAME}.md"`
+   - `mv "${TASK_DIR}/analysis.md" "todos/done/${TASK_NAME}-analysis.md"`
+   - `rmdir "${TASK_DIR}"`
 5. Stage all changes: `git add -A`
 6. STOP → Show the commit message to the user "Use this commit message? (y/n)"
    - - **CRITICAL** Do NOT mention yourself in the commit message or add yourself as a committer!
